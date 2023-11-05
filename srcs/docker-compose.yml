@@ -1,0 +1,16 @@
+#Each Docker image must have the same name as its corresponding service
+#https://docs.docker.com/compose/compose-file/compose-file-v3/
+
+services:
+  wordpress:
+    container_name: wordpress
+    build: ./wordpress/
+    image: wordpress
+  nginx:
+    container_name: nginx
+    build: ./nginx/
+    image: nginx
+  mariadb:
+    container_name: mariadb
+    build: ./mariadb/
+    image: mariadb
