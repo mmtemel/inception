@@ -1,11 +1,17 @@
-FROM debian
+FROM debian:buster
 
-# Install nginx and adjust nginx config to stay in foreground
-RUN apt-get update && apt-get install --no-install-recommends -y nginx; \
- echo "daemon off;" >> /etc/nginx/nginx.conf
+RUN apt-get update && apt-get install -y nginx openssl
 
-# Expose HTTP
-EXPOSE 80
+RUN mkdir /etc/nginx/ssl
 
-# Start nginx
-CMD ["/usr/sbin/nginx"]
+COPY ./conf/nginx.conf /etc/nginx/sites-enabled/default
+COPY ./tools/nginx_start.sh /var/www
+
+RUN chmod +x /var/www/nginx_start.sh
+RUN mkdir -p /run/nginx
+
+ENTRYPOINT ["var/www/nginx_start.sh"]
+
+EXPOSE 443
+
+CMD ["nginx", "-g", "daemon off;"]
