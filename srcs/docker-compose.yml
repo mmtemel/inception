@@ -12,11 +12,7 @@ services:
     build: ./requirements/nginx
 
     # Konteyneri başlatmadan önce bağlı olduğu konteynerleri belirtir.
-# Eğer bonus kısmını yapmayacaksanız bu kısmı yazmayın.
-    depends_on:
-      - adminer
-      - redis
-      - hugo
+    #depends_on:
     
     # Dinlenilecek : Yönlendirilecek portlar
     ports:
