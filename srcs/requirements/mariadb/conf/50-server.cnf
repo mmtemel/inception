@@ -1,16 +1,40 @@
 [mysqld]
 
+# MySQL user
 user                    = mysql
+
+# PID file location
 pid-file                = /run/mysqld/mysqld.pid
+
+# Socket file location
 socket                  = /run/mysqld/mysqld.sock
+
+# MySQL port
 port                    = 3306
+
+# MySQL base directory
 basedir                 = /usr
+
+# MySQL data directory
 datadir                 = /var/lib/mysql
+
+# Temporary directory
 tmpdir                  = /tmp
+
+# Location of language-specific error messages
 lc-messages-dir         = /usr/share/mysql
 
+# Query cache size
 query_cache_size        = 16M
-log_error = /var/log/mysql/error.log
+
+# Location of MySQL error log
+log_error               = /var/log/mysql/error.log
+
+# Number of days to keep binary logs
 expire_logs_days        = 10
+
+# Character set for the server
 character-set-server    = utf8mb4
+
+# Collation for the server
 collation-server        = utf8mb4_general_ci

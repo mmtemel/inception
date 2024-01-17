@@ -1,63 +1,81 @@
-# Dosya sürümü
+# File version
 version: '3'
 
-# Hizmetlerin(Konteyner) ayarları
+# Service (Container) configurations
 services:
 
+  # Nginx service
   nginx:
-    # Oluşturulacak Konteyner Adı
+    # Container name to be created
     container_name: nginx
 
-    # Dockerfile dosya yolu
+    # Path to the Dockerfile
     build: ./requirements/nginx
 
-    # Konteyneri başlatmadan önce bağlı olduğu konteynerleri belirtir.
-    #depends_on:
-    
-    # Dinlenilecek : Yönlendirilecek portlar
+    # Ports to be mapped for incoming connections
     ports:
       - 443:443
     
-    # Dosyaların saklanacağı dizin
+    # Volume for storing files
     volumes:
       - wordpress_data:/var/www/html
 
-    # Konteynerı otomatik olarak yeniden başlatır
+    # Automatically restart the container
     restart: always
 
-    # Konteynerin bağlı olduğu ağ
+    # Network the container is connected to
     networks:
       - network
 
+  # MariaDB service
   mariadb:
     container_name: mariadb
     build: ./requirements/mariadb
+
+    # Volume for persisting MariaDB data
     volumes:
       - mariadb_data:/var/lib/mysql
+
+    # Network the container is connected to
     networks:
       - network
-    restart: always
 
-    # .env dosyasındaki verileri ortam değişkenlerine atar
+    # Load environment variables from .env file
     env_file:
       - .env
 
+    # Automatically restart the container
+    restart: always
+
+  # WordPress service
   wordpress:
     container_name: wordpress
+
+    # Depends on the MariaDB service
     depends_on:
       - mariadb
+
+    # Build context and Dockerfile path for WordPress
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
+
+    # Automatically restart the container
     restart: always
+
+    # Load environment variables from .env file
     env_file:
       - .env
+
+    # Volume for storing WordPress files
     volumes:
       - wordpress_data:/var/www/html
+
+    # Network the container is connected to
     networks:
       - network
 
-# Hizmet verilerini saklar ve ana sistem ile bağlantı kurar.
+# Volumes to store data for services and connect to the host system
 volumes:
   mariadb_data:
     driver: local
@@ -72,7 +90,7 @@ volumes:
       device: /home/data/wordpress
       o: bind
 
-# Varsayılan ağ sürücüsüne bağlanır
+# Default network connected to the bridge driver
 networks:
   network:
     driver: bridge
