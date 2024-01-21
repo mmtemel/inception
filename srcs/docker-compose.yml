@@ -8,6 +8,7 @@ services:
   nginx:
     # Container name to be created
     container_name: nginx
+    image: nginx
 
     # Path to the Dockerfile
     build: ./requirements/nginx
@@ -30,6 +31,7 @@ services:
   # MariaDB service
   mariadb:
     container_name: mariadb
+    image: mariadb
     build: ./requirements/mariadb
 
     # Volume for persisting MariaDB data
@@ -50,6 +52,7 @@ services:
   # WordPress service
   wordpress:
     container_name: wordpress
+    image: wordpress
 
     # Depends on the MariaDB service
     depends_on:
@@ -81,13 +84,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /home/data/mysql
+      device: /home/mtemel/data/mysql
       o: bind
   wordpress_data:
     driver: local
     driver_opts:
       type: none
-      device: /home/data/wordpress
+      device: /home/mtemel/data/wordpress
       o: bind
 
 # Default network connected to the bridge driver
