@@ -1,15 +1,19 @@
-# Use the Debian Buster base image
 FROM debian:buster
 
-# Update package list and install MariaDB server
-RUN apt-get update && apt-get install -y mariadb-server
+ARG DB_NAME
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_ROOT_PASSWORD
 
-# Expose port 3306 for MariaDB
-EXPOSE 3306
+#-y flag for assume yes to update and upgrade stuff
+RUN apt-get update && apt-get upgrade -y
 
-# Copy custom MariaDB server configuration file
+#install mariadb and other usefull applications
+RUN apt-get install -y mariadb-server mariadb-client
+
 COPY ./conf/50-server.cnf /etc/mysql/mariadb.conf.d/
+COPY ./tools/ .
 
-COPY tools/start.sh /start.sh
+RUN sh db.sh
 
-ENTRYPOINT ["sh", "start.sh"]
+CMD ["mysqld"]

@@ -1,99 +1,83 @@
-# File version
 version: '3'
 
-# Service (Container) configurations
+volumes:
+  wp:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/mtemel/data/wp
+  db:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/mtemel/data/db
+
+networks:
+  my_network:
+    driver: bridge
+
 services:
-
-  # Nginx service
-  nginx:
-    # Container name to be created
-    container_name: nginx
-    image: nginx
-
-    # Path to the Dockerfile
-    build: ./requirements/nginx
-
-    # Ports to be mapped for incoming connections
-    ports:
-      - 443:443
-    
-    # Volume for storing files
-    volumes:
-      - wordpress_data:/var/www/html
-
-    # Automatically restart the container
-    restart: always
-
-    # Network the container is connected to
-    networks:
-      - network
-
-  # MariaDB service
   mariadb:
     container_name: mariadb
     image: mariadb
-    build: ./requirements/mariadb
-
-    # Volume for persisting MariaDB data
-    volumes:
-      - mariadb_data:/var/lib/mysql
-
-    # Network the container is connected to
     networks:
-      - network
-
-    # Load environment variables from .env file
+      - my_network
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+      args:
+        DB_NAME: $MYSQL_DB
+        DB_USER: $MYSQL_USER
+        DB_PASSWORD: $MYSQL_PASSWORD
+        DB_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+    ports:
+      - "3306:3306"
     env_file:
       - .env
-
-    # Automatically restart the container
+    volumes:
+      - /home/mtemel/data/db:/home/data
     restart: always
+    tty: true
 
-  # WordPress service
+  nginx:
+    container_name: nginx
+    image: nginx
+    depends_on:
+      - wordpress
+    networks:
+      - my_network
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+      args:
+        CERT_FILE: $CERT_FILE
+        KEY_FILE: $KEY_FILE
+    env_file:
+      - .env
+    ports:
+      - "443:443"
+    restart: always
+    volumes:
+      - wp:/var/www/html
+    tty: true
+
   wordpress:
     container_name: wordpress
     image: wordpress
-
-    # Depends on the MariaDB service
     depends_on:
       - mariadb
-
-    # Build context and Dockerfile path for WordPress
+    networks:
+      - my_network
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
-
-    # Automatically restart the container
-    restart: always
-
-    # Load environment variables from .env file
     env_file:
       - .env
-
-    # Volume for storing WordPress files
+    ports:
+      - "9000:9000"
     volumes:
-      - wordpress_data:/var/www/html
-
-    # Network the container is connected to
-    networks:
-      - network
-
-# Volumes to store data for services and connect to the host system
-volumes:
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/mtemel/data/mysql
-      o: bind
-  wordpress_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/mtemel/data/wordpress
-      o: bind
-
-# Default network connected to the bridge driver
-networks:
-  network:
-    driver: bridge
+      - wp:/var/www/html
+    restart: always
+    tty: true

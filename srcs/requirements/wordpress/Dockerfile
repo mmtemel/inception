@@ -1,45 +1,18 @@
-# Use the Debian Buster base image
 FROM debian:buster
 
-# Update package list and install necessary packages
-RUN apt-get update && apt-get -y install \
- wget \
- curl \
- bash \
- php \
- php-cgi \
- php-mysql \
- php-fpm \
- php-pdo \
- php-gd php-cli \
- php-mbstring \
- redis \
- php-redis \
- && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y curl php-fpm php-mysql mariadb-client
 
-# Download and set up WP-CLI
-RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-  && chmod +x wp-cli.phar \
-  && mv wp-cli.phar /usr/local/bin/wp
+COPY tools/config.sh .
 
-# Copy custom PHP-FPM configuration file
-COPY ./conf/www.conf /etc/php/7.3/fpm/pool.d/
+RUN chmod 755 /config.sh
 
-# Create directory for PHP-FPM to store runtime files
-RUN mkdir /run/php
+WORKDIR /var/www/html
 
-# Copy custom script for creating WordPress instances
-COPY ./tools/create_wordpress.sh /usr/local/bin/
-# Give execute permissions to the script
-RUN chmod +x /usr/local/bin/create_wordpress.sh
-# Set the script as the entry point
-ENTRYPOINT ["/usr/local/bin/create_wordpress.sh"]
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
 
-# Set the working directory to /var/www/html/
-WORKDIR /var/www/html/
+COPY ./conf/php.conf /etc/php/7.3/fpm/pool.d/www.conf
 
-# Expose port 9000 for PHP-FPM
-EXPOSE 9000
-
-# Start PHP-FPM in foreground mode
-CMD ["/usr/sbin/php-fpm7.3", "-F"]
+CMD /config.sh && exec /usr/sbin/php-fpm7.3 -F

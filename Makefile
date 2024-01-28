@@ -1,40 +1,36 @@
-DC := docker-compose -f ./srcs/docker-compose.yml
+DATA_DIR = /home/mtemel/data
 
-all:
-	@mkdir -p /home/mtemel/data/wordpress
-	@mkdir -p /home/mtemel/data/mysql
-	@$(DC) up -d --build
+HOSTNAME = "127.0.0.1	mtemel.42.fr"
 
-down:
-	@$(DC) down
+all: dir
+	docker-compose -f srcs/docker-compose.yml up -d --build
 
-re: fclean all
+re: fclean dir
+	docker-compose -f srcs/docker-compose.yml --env-file=srcs/.env up -d --build
 
 clean:
-	@rm -rf $(WP_DIR) $(DB_DIR)
-	@$(DC) down --rmi all --volumes
-	@docker image prune -f
-	@docker network prune -f
-	@docker system prune -af
+	docker-compose -f srcs/docker-compose.yml --env-file=srcs/.env down --remove-orphans -v
 
-fclean: clean ## It thoroughly cleans the Docker environment and gets it ready for a fresh start.
-	@if [ $$(docker ps -aq | wc -l) -gt 0 ]; then \
-		docker stop $$(docker ps -aq); \
-		docker rm -vf $$(docker ps -aq); \
+fclean: clean
+	docker system prune -af
+	docker container prune -f
+	docker image prune -af
+	docker builder prune --all --force
+	docker network prune -f
+	if [ -d "${DATA_DIR}" ]; then \
+		cd ${DATA_DIR} && rm -rf *; \
 	fi
-	@if [ $$(docker images -aq | wc -l) -gt 0 ]; then \
-		docker rmi -f $$(docker images -aq); \
-	fi
-	@if [ $$(docker volume ls -q | wc -l) -gt 0 ]; then \
-		docker volume rm $$(docker volume ls -q); \
-	fi
-	@if [ $$(docker network ls | grep -v "bridge\|none\|host" | awk '{print $$1}' | tail -n +2 | wc -l) -gt 0 ]; then \
-		docker network rm $$(docker network ls | grep -v "bridge\|none\|host" | awk '{print $$1}' | tail -n +2); \
-	fi
-	@rm -rf $(WP_DIR) $(DB_DIR)
 
-.PHONY: all down re clean fclean
+up:
+	docker-compose -f srcs/docker-compose.yml up -d
 
-#vim /etc/hosts
-#then
-#add -> 127.0.1.2 mtemel.42.fr
+down:
+	docker-compose -f srcs/docker-compose.yml down
+
+dir:
+	mkdir -p /root/data
+	sudo mkdir -p ${DATA_DIR}/wp
+	sudo mkdir -p ${DATA_DIR}/db
+	echo ${HOSTNAME} | sudo tee -a /etc/hosts
+
+.PHONY: all re clean fclean dir up down

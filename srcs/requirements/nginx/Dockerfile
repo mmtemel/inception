@@ -1,29 +1,23 @@
-# Use the Debian Buster base image
 FROM debian:buster
 
-# Update package list and install Nginx and OpenSSL
-RUN apt-get update && apt-get install -y nginx openssl
+ARG CERT_FILE
+ARG KEY_FILE
 
-# Create a directory for SSL configurations
-RUN mkdir /etc/nginx/ssl
+RUN apt-get update && apt-get upgrade -y
 
-# Copy custom Nginx configuration file to the default sites-enabled directory
-COPY ./conf/nginx.conf /etc/nginx/sites-enabled/default
+RUN apt-get install -y openssl nginx
 
-# Copy a script for starting Nginx to /var/www/
-COPY ./tools/nginx_start.sh /var/www
+COPY tools/nginx.sh /usr/local/bin/nginx.sh
 
-# Give execute permissions to the Nginx start script
-RUN chmod +x /var/www/nginx_start.sh
+RUN chmod +x /usr/local/bin/nginx.sh
 
-# Create a directory for Nginx runtime files
-RUN mkdir -p /run/nginx
+RUN /usr/local/bin/nginx.sh
 
-# Set the entry point for the container to execute the Nginx start script
-ENTRYPOINT ["var/www/nginx_start.sh"]
+COPY conf/nginx.conf /etc/nginx/sites-enabled/nginx.conf
 
-# Expose port 443 for HTTPS traffic
-EXPOSE 443
 
-# Set the default command to run when the container starts (start Nginx in daemon off mode)
+# RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
+
+#the command run when this container starts
 CMD ["nginx", "-g", "daemon off;"]
+
